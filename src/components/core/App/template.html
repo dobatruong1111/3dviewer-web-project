@@ -1,0 +1,23 @@
+<v-app>
+  <v-app-bar app>
+    <v-icon :class="$style.logo" v-text="`$logo`" v-on:click="resetCamera()" />
+    <span class="title">3D Viewer</span>
+    <v-progress-linear :active="busy" :indeterminate="busy" absolute bottom />
+    <v-spacer />
+
+    <v-btn variant="outlined" v-on:click="crop3d()">Crop</v-btn>
+    <v-btn variant="outlined" v-on:click="showBoneCT()">Bone</v-btn>
+    <v-btn variant="outlined" v-on:click="showAngioCT()">Angio</v-btn>
+    <v-btn variant="outlined" v-on:click="showMuscleCT()">Muscle</v-btn>
+    <v-btn variant="outlined" v-on:click="showMip()">Mip</v-btn>
+
+    <v-icon :class="$style.logo" v-text="`$reset`" v-on:click="resetCamera()" />
+    <v-icon :class="$style.logo" v-text="`$light`" v-on:click="light()" />
+  </v-app-bar>
+
+  <v-main :class="$style.appContent">
+    <div style="position: relative; width: 100%; height: 100%">
+      <remote-rendering-view :client="client" />
+    </div>
+  </v-main>
+</v-app>

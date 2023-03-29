@@ -1,0 +1,29 @@
+:global(.content--wrap) {
+  position: relative;
+}
+
+.appContent {
+  /* need a fixed height of arbitrary value
+     * so the vtk viewers don't grow too much in
+     * height when resizing. */
+  height: 0;
+}
+
+.logo {
+  height: 35px;
+  padding-right: 10px;
+}
+
+.slider {
+  max-width: 300px;
+}
+
+.switch {
+  padding-right: 20px;
+}
+
+.v-btn:not(.v-btn--round).v-size--default {
+  height: 36px;
+  min-width: 64px;
+  margin: 10px;
+}
