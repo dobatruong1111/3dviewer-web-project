@@ -4,6 +4,7 @@ from wslink import register as exportRpc
 import vtk
 from model.colormap import CUSTOM_COLORMAP
 from model.presets import *
+from typing import List
 
 # -------------------------------------------------------------------------
 # ViewManager
@@ -26,6 +27,8 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         self.boxRep = vtk.vtkBoxRepresentation()
         self.widget = vtk.vtkBoxWidget2()
         self.planes = vtk.vtkPlanes()
+        # Cropping freehand
+        self.checkBtCropFreehand = True
 
     @exportRpc("vtk.initialize")
     def createVisualization(self):
@@ -227,6 +230,128 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
 
       renderWindow.Render()
       self.getApplication().InvokeEvent('UpdateEvent') # create event after send to object
+
+    @exportRpc("vtk.dicom3d.cropfreehand")
+    def cropFreehand3d(self):
+      # print("crop freehand")
+      interactor = self.getApplication().GetObjectIdMap().GetActiveObject("INTERACTOR")
+      renderWindow = self.getView('-1')
+      renderer = renderWindow.GetRenderers().GetFirstRenderer()
+      if self.checkBtCropFreehand:
+        pipeline = ScissorPipeline()
+        renderer.AddActor(pipeline.actor)
+        renderer.AddActor(pipeline.actorThin)
+        style = CropFreehandInteractorStyle(pipeline)
+        interactor.SetInteractorStyle(style)
+        self.checkBtCropFreehand = False
+      else:
+        style = vtk.vtkInteractorStyleTrackballCamera()
+        interactor.SetInteractorStyle(style)
+        self.checkBtCropFreehand = True
+
+class ScissorPipeline():
+  def __init__(self) -> None:
+    self.isDragging = False
+    self.polyData = vtk.vtkPolyData()
+    self.mapper = vtk.vtkPolyDataMapper2D()
+    self.mapper.SetInputData(self.polyData)
+    self.actor = vtk.vtkActor2D()
+    self.actor.SetMapper(self.mapper)
+    self.actor.GetProperty().SetColor(1, 1, 0)
+    self.actor.GetProperty().SetLineWidth(2)
+    self.actor.VisibilityOff()
+
+    self.polyDataThin = vtk.vtkPolyData()
+    self.mapperThin = vtk.vtkPolyDataMapper2D()
+    self.mapperThin.SetInputData(self.polyDataThin)
+    self.actorThin = vtk.vtkActor2D()
+    self.actorThin.SetMapper(self.mapperThin)
+    self.actorThin.VisibilityOff()
+    outlinePropertyThin = self.actorThin.GetProperty()
+    outlinePropertyThin.SetColor(0.7, 0.7, 0)
+    outlinePropertyThin.SetLineStipplePattern(0xff00)
+    outlinePropertyThin.SetLineWidth(1)
+
+class CropFreehandInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
+  def __init__(self, pipeline) -> None:
+    super().__init__()
+    self.pipeline = pipeline
+    self.AddObserver("LeftButtonPressEvent", self.leftButtonDown)
+    self.AddObserver("LeftButtonReleaseEvent", self.leftButtonUp)
+
+  @staticmethod
+  def createGlyph(pipeline: ScissorPipeline, eventPosition: List) -> None:
+    if pipeline.isDragging:
+      # numberOfPoints = 1
+      points = vtk.vtkPoints()
+      lines = vtk.vtkCellArray()
+      pipeline.polyData.SetPoints(points)
+      pipeline.polyData.SetLines(lines)
+
+      points.InsertNextPoint(eventPosition[0], eventPosition[1], 0)
+
+      pointsThin = vtk.vtkPoints()
+      linesThin = vtk.vtkCellArray()
+      pipeline.polyDataThin.SetPoints(pointsThin)
+      pipeline.polyDataThin.SetLines(linesThin)
+
+      pointsThin.InsertNextPoint(eventPosition[0], eventPosition[1], 0)
+      pointsThin.InsertNextPoint(eventPosition[0], eventPosition[1], 0)
+
+      idList = vtk.vtkIdList()
+      idList.InsertNextId(0)
+      idList.InsertNextId(1)
+      pipeline.polyDataThin.InsertNextCell(vtk.VTK_LINE, idList)
+
+      pipeline.actorThin.VisibilityOn()
+      pipeline.actor.VisibilityOn()
+    else:
+      pipeline.actor.VisibilityOff()
+      pipeline.actorThin.VisibilityOff()
+
+  @staticmethod
+  def updateGlyphWithNewPosition(pipeline: ScissorPipeline, eventPosition: List, finalize: bool) -> None:
+    if pipeline.isDragging:
+      points = pipeline.polyData.GetPoints() # vtkPoints()
+      newPointIndex = points.InsertNextPoint(eventPosition[0], eventPosition[1], 0)
+      idList = vtk.vtkIdList()
+      if finalize:
+        idList.InsertNextId(newPointIndex)
+        idList.InsertNextId(0)
+      else:
+        idList.InsertNextId(newPointIndex - 1)
+        idList.InsertNextId(newPointIndex)
+      pipeline.polyData.InsertNextCell(vtk.VTK_LINE, idList)
+      points.Modified()
+      pipeline.polyDataThin.GetPoints().SetPoint(1, eventPosition[0], eventPosition[1], 0)
+      pipeline.polyDataThin.GetPoints().Modified()
+    else:
+      pipeline.actor.VisibilityOff()
+      pipeline.actorThin.VisibilityOff()
+
+  def leftButtonDown(self, obj, event):
+    self.pipeline.isDragging = True
+    eventPosition = self.GetInteractor().GetEventPosition()
+    self.createGlyph(self.pipeline, eventPosition)
+    if not self.HasObserver("MouseMoveEvent"):
+      self.AddObserver("MouseMoveEvent", self.mouseMoveEvent)
+    self.OnLeftButtonDown()
+  
+  def mouseMoveEvent(self, obj, event):
+    if self.pipeline.isDragging:
+      eventPosition = self.GetInteractor().GetEventPosition()
+      self.updateGlyphWithNewPosition(self.pipeline, eventPosition, False)
+      self.GetInteractor().Render()
+
+  def leftButtonUp(self, obj, event):
+    if self.pipeline.isDragging:
+      eventPosition = self.GetInteractor().GetEventPosition()
+      self.updateGlyphWithNewPosition(self.pipeline, eventPosition, True)
+      self.pipeline.isDragging = False
+      self.updateGlyphWithNewPosition(self.pipeline, eventPosition, True)
+      if self.HasObserver("MouseMoveEvent"):
+        self.RemoveObservers("MouseMoveEvent")
+      self.OnLeftButtonUp()
 
 class IPWCallback():
   def __init__(self, planes, mapper) -> None:

@@ -5,6 +5,7 @@
     <v-progress-linear :active="busy" :indeterminate="busy" absolute bottom />
     <v-spacer />
 
+    <v-btn variant="outlined" v-on:click="cropFreehand3d()">Crop Freehand</v-btn>
     <v-btn variant="outlined" v-on:click="crop3d()">Crop</v-btn>
     <v-btn variant="outlined" v-on:click="showBoneCT()">Bone</v-btn>
     <v-btn variant="outlined" v-on:click="showAngioCT()">Angio</v-btn>

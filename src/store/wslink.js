@@ -148,5 +148,10 @@ export default {
         state.client.getRemote().Cone.crop3d().catch(console.error);
       }
     },
+    WS_CROPFREEHAND3D({ state }) {
+      if (state.client) {
+        state.client.getRemote().Cone.cropFreehand3d().catch(console.error);
+      }
+    },
   },
 };
