@@ -5,6 +5,7 @@ import vtk
 from model.colormap import CUSTOM_COLORMAP
 from model.presets import *
 from typing import List
+import time
 
 # -------------------------------------------------------------------------
 # ViewManager
@@ -37,7 +38,7 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         renderer = renderWindow.GetRenderers().GetFirstRenderer()
 
         # reader
-        path = "C:/Users/DELL E5540/Desktop/Python/dicom-data/Ankle"
+        path = "C:/Users/DELL E5540/Desktop/Python/dicom-data/220277460 Nguyen Thanh Dat/Unknown Study/CT 1.25mm Stnd KHONG TIEM"
         self.reader.SetDirectoryName(path)
         self.reader.Update()
 
