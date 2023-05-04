@@ -1,10 +1,10 @@
 ## 3D Dicom Viewer Project
 
-### Before run project
+### Before run the application
 
 You need edit the path to your dicom directory (server/vtkpython/vtk_protocol.py).
 
-### Run project
+### Run the application
 
 ```
 $ git clone https://github.com/dobatruong1111/3dviewer-web-project.git
