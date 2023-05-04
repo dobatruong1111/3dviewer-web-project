@@ -26,6 +26,10 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         self.boxRep = vtk.vtkBoxRepresentation()
         self.widget = vtk.vtkBoxWidget2()
         self.planes = vtk.vtkPlanes()
+        # Outline
+        self.outline = vtk.vtkOutlineFilter()
+        self.outlineMapper = vtk.vtkPolyDataMapper()
+        self.outlineActor = vtk.vtkActor()
 
     @exportRpc("vtk.initialize")
     def createVisualization(self):
@@ -34,9 +38,15 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         renderer = renderWindow.GetRenderers().GetFirstRenderer()
 
         # reader
-        path = "C:/Users/DELL E5540/Desktop/Python/dicom-data/Ankle"
+        path = "C:/Users/DELL E5540/Desktop/3dviewer-web-project/server/vtkpython/dicomdata/ankle"
         self.reader.SetDirectoryName(path)
         self.reader.Update()
+
+        # outline
+        self.outline.SetInputConnection(self.reader.GetOutputPort())
+        self.outlineMapper.SetInputConnection(self.outline.GetOutputPort())
+        self.outlineActor.SetMapper(self.outlineMapper)
+        self.outlineActor.GetProperty().SetColor(0, 0, 0)
 
         # mapper
         self.mapper.SetInputData(self.reader.GetOutput())
@@ -82,6 +92,7 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
 
         # render
         renderer.AddVolume(self.volume)
+        renderer.AddActor(self.outlineActor)
         renderer.ResetCamera()
 
         # render window
@@ -139,10 +150,12 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
       if self.checkLight:
         renderer.SetBackground(self.colors.GetColor3d("Black"))
         self.boxRep.GetOutlineProperty().SetColor(1, 1, 1)
+        self.outlineActor.GetProperty().SetColor(1, 1, 1)
         self.checkLight = False
       else:
         renderer.SetBackground(self.colors.GetColor3d("White"))
         self.boxRep.GetOutlineProperty().SetColor(0, 0, 0)
+        self.outlineActor.GetProperty().SetColor(0, 0, 0)
         self.checkLight = True
 
       renderWindow.Render()
