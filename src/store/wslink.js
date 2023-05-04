@@ -148,5 +148,10 @@ export default {
         state.client.getRemote().Cone.crop3d().catch(console.error);
       }
     },
+    WS_MEASURE_LENGTH_3D({state}) {
+      if (state.client) {
+        state.client.getRemote().Cone.measureLength3d().catch(console.error);
+      }
+    }
   },
 };

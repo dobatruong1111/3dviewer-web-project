@@ -4,6 +4,8 @@ from wslink import register as exportRpc
 import vtk
 from model.colormap import CUSTOM_COLORMAP
 from model.presets import *
+from model.pipelines.markupLine import MarkupLinePipeline
+from model.markups.markupLineInteractorStyle import MarkupLineInteractorStyle
 
 # -------------------------------------------------------------------------
 # ViewManager
@@ -34,7 +36,7 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         renderer = renderWindow.GetRenderers().GetFirstRenderer()
 
         # reader
-        path = "C:/Users/DELL E5540/Desktop/Python/dicom-data/Ankle"
+        path = "C:/Users/DELL E5540/Desktop/Python/dicom-data/220277460 Nguyen Thanh Dat/Unknown Study/CT 1.25mm Stnd KHONG TIEM"
         self.reader.SetDirectoryName(path)
         self.reader.Update()
 
@@ -227,6 +229,21 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
 
       renderWindow.Render()
       self.getApplication().InvokeEvent('UpdateEvent') # create event after send to object
+
+    @exportRpc("vtk.dicom3d.markups.line")
+    def markupLine(self):
+      interactor = self.getApplication().GetObjectIdMap().GetActiveObject("INTERACTOR")
+      renderWindow = self.getView('-1')
+      renderer = renderWindow.GetRenderers().GetFirstRenderer()
+      pipeline = MarkupLinePipeline()
+      style = MarkupLineInteractorStyle(pipeline)
+
+      renderer.AddActor(pipeline.actor)
+      renderer.AddActor(pipeline.showLength)
+      renderer.AddActor(pipeline.firstSphereActor)
+      renderer.AddActor(pipeline.secondSphereActor)
+
+      interactor.SetInteractorStyle(style)
 
 class IPWCallback():
   def __init__(self, planes, mapper) -> None:
