@@ -36,7 +36,7 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         renderer = renderWindow.GetRenderers().GetFirstRenderer()
 
         # reader
-        path = "C:/Users/DELL E5540/Desktop/Python/dicom-data/220277460 Nguyen Thanh Dat/Unknown Study/CT 1.25mm Stnd KHONG TIEM"
+        path = "C:/Users/DELL E5540/Desktop/Python/dicom-data/Ankle"
         self.reader.SetDirectoryName(path)
         self.reader.Update()
 
