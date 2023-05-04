@@ -1,1 +1,1 @@
-## Web Project
+## 3D Dicom Viewer Project
