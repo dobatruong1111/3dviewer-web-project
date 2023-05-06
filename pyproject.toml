@@ -10,6 +10,7 @@ packages = [{include = "3dviewer_web_project"}]
 python = "^3.9"
 vtk = "^9.2.6"
 wslink = "^1.10.1"
+numpy = "^1.24.3"
 
 
 [build-system]

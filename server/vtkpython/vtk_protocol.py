@@ -1,12 +1,14 @@
+from typing import Any
 from vtk.web import protocols as vtk_protocols
 from wslink import register as exportRpc
 
 import vtk
 from model.colormap import CUSTOM_COLORMAP
 from model.presets import *
+from model.measure.viewer3dMeasureLength import Viewer3dMeasureLengthPipeline, Viewer3dMeasureLengthInteractorStyle, Viewer3dAfterMeasureLengthInteractorStyle
 
 # -------------------------------------------------------------------------
-# ViewManager
+# 3D Viewer Manager
 # -------------------------------------------------------------------------
 
 class Dicom3D(vtk_protocols.vtkWebProtocol):
@@ -22,23 +24,27 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         # ---
         self.checkLight = True
         self.checkBox = True
-        # Cropping
+        # cropping
         self.boxRep = vtk.vtkBoxRepresentation()
         self.widget = vtk.vtkBoxWidget2()
         self.planes = vtk.vtkPlanes()
-        # Outline
+        # outline
         self.outline = vtk.vtkOutlineFilter()
         self.outlineMapper = vtk.vtkPolyDataMapper()
         self.outlineActor = vtk.vtkActor()
+        # cell picker
+        self.cellPicker = vtk.vtkCellPicker()
+        # measure length
+        self.afterMeasureLengthInteractorStyle = Viewer3dAfterMeasureLengthInteractorStyle()
 
     @exportRpc("vtk.initialize")
     def createVisualization(self):
-        interactor = self.getApplication().GetObjectIdMap().GetActiveObject("INTERACTOR")
+        renderWindowInteractor = self.getApplication().GetObjectIdMap().GetActiveObject("INTERACTOR")
         renderWindow = self.getView('-1')
         renderer = renderWindow.GetRenderers().GetFirstRenderer()
-
+      
         # reader
-        path = "C:/Users/DELL E5540/Desktop/3dviewer-web-project/server/vtkpython/dicomdata/ankle"
+        path = "C:/Users/DELL E5540/Desktop/Python/dicom-data/64733 NGUYEN TAN THANH/DONG MACH CHI DUOI CTA/CT CTA iDose 5"
         self.reader.SetDirectoryName(path)
         self.reader.Update()
 
@@ -63,7 +69,7 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
           self.color.AddRGBPoint(point[0], point[1], point[2], point[3])
         self.volProperty.SetColor(self.color)
 
-        # Muscle CT
+        # muscle CT
         self.scalarOpacity.RemoveAllPoints()
         scalarOpacityRange = MUSCLE_CT.get("transferFunction").get("scalarOpacityRange")
         self.scalarOpacity.AddPoint(scalarOpacityRange[0], 0)
@@ -73,15 +79,13 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         # volume
         self.volume.SetMapper(self.mapper)
         self.volume.SetProperty(self.volProperty)
-        # center = self.volume.GetCenter()
-        # self.volume.SetPosition(-center[0], -center[1], -center[2])
 
         # cropping
         self.boxRep.GetOutlineProperty().SetColor(0, 0, 0)
         self.boxRep.SetInsideOut(True)
 
         self.widget.SetRepresentation(self.boxRep)
-        self.widget.SetInteractor(interactor)
+        self.widget.SetInteractor(renderWindowInteractor)
         self.widget.GetRepresentation().SetPlaceFactor(1)
         self.widget.GetRepresentation().PlaceWidget(self.reader.GetOutput().GetBounds())
         self.widget.SetEnabled(True)
@@ -93,10 +97,19 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         # render
         renderer.AddVolume(self.volume)
         renderer.AddActor(self.outlineActor)
-        renderer.ResetCamera()
 
         # render window
-        renderWindow.Render()
+
+        # render window interactor
+        self.cellPicker.AddPickList(self.volume)
+        self.cellPicker.PickFromListOn()
+        renderWindowInteractor.SetPicker(self.cellPicker)
+        # style = InteractorStyle()
+        # renderWindowInteractor.SetInteractorStyle(style)
+        # renderWindowInteractor.Render()
+        # renderWindow.Render()
+        # renderWindowInteractor.Start()
+
         return self.resetCamera()
 
     @exportRpc("vtk.camera.reset")
@@ -241,6 +254,24 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
       renderWindow.Render()
       self.getApplication().InvokeEvent('UpdateEvent') # create event after send to object
 
+    @exportRpc("vtk.dicom3d.measure.length")
+    def measureLength(self):
+      renderWindowInteractor = self.getApplication().GetObjectIdMap().GetActiveObject("INTERACTOR")
+      renderWindow = self.getView('-1')
+      renderer = renderWindow.GetRenderers().GetFirstRenderer()
+
+      measureLengthPipeline = Viewer3dMeasureLengthPipeline()
+      renderer.AddActor(measureLengthPipeline.lineActor)
+      renderer.AddActor(measureLengthPipeline.showLength)
+      renderer.AddActor(measureLengthPipeline.firstSphereActor)
+      renderer.AddActor(measureLengthPipeline.secondSphereActor)
+
+      style = Viewer3dMeasureLengthInteractorStyle(measureLengthPipeline, self.afterMeasureLengthInteractorStyle)
+      renderWindowInteractor.SetInteractorStyle(style)
+
+      self.getApplication().InvokeEvent('UpdateEvent')
+      print("measure length")
+
 class IPWCallback():
   def __init__(self, planes, mapper) -> None:
     self.planes = planes
@@ -249,3 +280,22 @@ class IPWCallback():
   def __call__(self, obj: vtk.vtkBoxWidget2, event: str) -> None:
     obj.GetRepresentation().GetPlanes(self.planes)
     self.mapper.SetClippingPlanes(self.planes)
+
+class InteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
+  def __init__(self) -> None:
+    self.AddObserver("LeftButtonPressEvent", self.leftButtonDownEvent)
+    self.AddObserver("MouseMoveEvent", self.mouseMoveEvent)
+    self.AddObserver("LeftButtonReleaseEvent", self.leftButtonUpEvent)
+
+  def leftButtonDownEvent(self, obj, event) -> None:
+    print("lefft button down")
+    self.OnLeftButtonDown()
+
+  def mouseMoveEvent(self, obj, event) -> None:
+    print("mouse move")
+    self.GetInteractor().Render()
+    self.OnMouseMove()
+
+  def leftButtonUpEvent(self, obj, event) -> None:
+    print("left button up")
+    self.OnLeftButtonUp()
