@@ -1,4 +1,4 @@
-from model.colormap import CUSTOM_COLORMAP
+from models.colormap import CUSTOM_COLORMAP
 
 BONE_CT = {
     "transferFunction": {

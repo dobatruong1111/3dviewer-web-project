@@ -25,7 +25,6 @@ export default {
   },
   methods: {
     ...mapActions({
-      setResolution: 'CONE_RESOLUTION_UPDATE',
       resetCamera: 'WS_RESET_CAMERA',
       connect: 'WS_CONNECT',
       showBoneCT: 'WS_SHOW_BONE_CT',

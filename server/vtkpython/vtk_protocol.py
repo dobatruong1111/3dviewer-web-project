@@ -2,8 +2,8 @@ from vtk.web import protocols as vtk_protocols
 from wslink import register as exportRpc
 
 import vtk
-from model.colormap import CUSTOM_COLORMAP
-from model.presets import *
+from models.colormap import CUSTOM_COLORMAP
+from models.presets import *
 
 # -------------------------------------------------------------------------
 # ViewManager

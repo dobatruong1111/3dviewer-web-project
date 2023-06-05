@@ -105,14 +105,6 @@ export default {
           .catch(console.error);
       }
     },
-    WS_UPDATE_RESOLUTION({ state }, resolution) {
-      if (state.client) {
-        state.client
-          .getRemote()
-          .Cone.updateResolution(resolution)
-          .catch(console.error);
-      }
-    },
     WS_RESET_CAMERA({ state }) {
       if (state.client) {
         state.client.getRemote().Cone.resetCamera().catch(console.error);
