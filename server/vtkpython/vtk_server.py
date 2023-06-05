@@ -89,12 +89,9 @@ class _Server(vtk_wslink.ServerProtocol):
             renderWindow.AddRenderer(renderer)
             renderWindow.OffScreenRenderingOn()
 
-            style = vtk.vtkInteractorStyleTrackballCamera()
-
             renderWindowInteractor = vtk.vtkRenderWindowInteractor()
             renderWindowInteractor.SetRenderWindow(renderWindow)
-            renderWindowInteractor.SetInteractorStyle(style)
-            # renderWindowInteractor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
+            renderWindowInteractor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
             renderWindowInteractor.EnableRenderOff()
 
             # self.getApplication() -> vtkWebApplication()

@@ -34,7 +34,6 @@ export default {
       showMip: 'WS_SHOW_MIP',
       light: 'WS_LIGHT',
       crop3d: 'WS_CROP3D',
-      measureLength3d: 'WS_MEASURE_LENGTH_3D'
     }),
   },
   mounted() {

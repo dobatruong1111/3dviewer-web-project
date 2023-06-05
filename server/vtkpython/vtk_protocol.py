@@ -4,8 +4,6 @@ from wslink import register as exportRpc
 import vtk
 from model.colormap import CUSTOM_COLORMAP
 from model.presets import *
-from model.pipelines.markupLine import MarkupLinePipeline
-from model.markups.markupLineInteractorStyle import MarkupLineInteractorStyle
 
 # -------------------------------------------------------------------------
 # ViewManager
@@ -14,14 +12,18 @@ from model.markups.markupLineInteractorStyle import MarkupLineInteractorStyle
 class Dicom3D(vtk_protocols.vtkWebProtocol):
     def __init__(self):
         self.colors = vtk.vtkNamedColors()
-        # pipeline
+        # Pipeline
         self.reader = vtk.vtkDICOMImageReader()
         self.mapper = vtk.vtkSmartVolumeMapper()
         self.volProperty = vtk.vtkVolumeProperty()
         self.volume = vtk.vtkVolume()
         self.color = vtk.vtkColorTransferFunction()
         self.scalarOpacity = vtk.vtkPiecewiseFunction()
-        # ---
+        # Outline
+        self.outline = vtk.vtkOutlineFilter()
+        self.outlineMapper = vtk.vtkPolyDataMapper()
+        self.outlineActor = vtk.vtkActor()
+        # Checking
         self.checkLight = True
         self.checkBox = True
         # Cropping
@@ -35,20 +37,24 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         renderWindow = self.getView('-1')
         renderer = renderWindow.GetRenderers().GetFirstRenderer()
 
-        # reader
+        # Reader
         path = "C:/Users/DELL E5540/Desktop/Python/dicom-data/Ankle"
         self.reader.SetDirectoryName(path)
         self.reader.Update()
 
-        # mapper
-        self.mapper.SetInputData(self.reader.GetOutput())
+        # Outline
+        self.outline.SetInputConnection(self.reader.GetOutputPort())
+        self.outlineMapper.SetInputConnection(self.outline.GetOutputPort())
+        self.outlineActor.SetMapper(self.outlineMapper)
+        self.outlineActor.GetProperty().SetColor(0, 0, 0)
 
-        # volume property
+        # Mapper
+        self.mapper.SetInputData(self.reader.GetOutput())
+        # Volume property
         self.volProperty.ShadeOn()
         self.volProperty.SetAmbient(0.1)
         self.volProperty.SetDiffuse(0.9)
         self.volProperty.SetSpecular(0.2)
-
         self.color.RemoveAllPoints()
         rgbPoints = CUSTOM_COLORMAP.get("STANDARD_CT").get("rgbPoints")
         for point in rgbPoints:
@@ -62,13 +68,11 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         self.scalarOpacity.AddPoint(scalarOpacityRange[1], 1)
         self.volProperty.SetScalarOpacity(self.scalarOpacity)
 
-        # volume
+        # Volume
         self.volume.SetMapper(self.mapper)
         self.volume.SetProperty(self.volProperty)
-        # center = self.volume.GetCenter()
-        # self.volume.SetPosition(-center[0], -center[1], -center[2])
 
-        # cropping
+        # Cropping
         self.boxRep.GetOutlineProperty().SetColor(0, 0, 0)
         self.boxRep.SetInsideOut(True)
 
@@ -82,11 +86,12 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         self.widget.AddObserver(vtk.vtkCommand.InteractionEvent, ipwcallback)
         self.widget.Off()
 
-        # render
+        # Render
         renderer.AddVolume(self.volume)
+        renderer.AddActor(self.outlineActor)
         renderer.ResetCamera()
 
-        # render window
+        # Render window
         renderWindow.Render()
         return self.resetCamera()
 
@@ -140,10 +145,12 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
 
       if self.checkLight:
         renderer.SetBackground(self.colors.GetColor3d("Black"))
+        self.outlineActor.GetProperty().SetColor(1, 1, 1)
         self.boxRep.GetOutlineProperty().SetColor(1, 1, 1)
         self.checkLight = False
       else:
         renderer.SetBackground(self.colors.GetColor3d("White"))
+        self.outlineActor.GetProperty().SetColor(0, 0, 0)
         self.boxRep.GetOutlineProperty().SetColor(0, 0, 0)
         self.checkLight = True
 
@@ -228,22 +235,7 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         self.checkBox = True
 
       renderWindow.Render()
-      self.getApplication().InvokeEvent('UpdateEvent') # create event after send to object
-
-    @exportRpc("vtk.dicom3d.markups.line")
-    def markupLine(self):
-      interactor = self.getApplication().GetObjectIdMap().GetActiveObject("INTERACTOR")
-      renderWindow = self.getView('-1')
-      renderer = renderWindow.GetRenderers().GetFirstRenderer()
-      pipeline = MarkupLinePipeline()
-      style = MarkupLineInteractorStyle(pipeline)
-
-      renderer.AddActor(pipeline.actor)
-      renderer.AddActor(pipeline.showLength)
-      renderer.AddActor(pipeline.firstSphereActor)
-      renderer.AddActor(pipeline.secondSphereActor)
-
-      interactor.SetInteractorStyle(style)
+      self.getApplication().InvokeEvent('UpdateEvent') # Create event after send to object
 
 class IPWCallback():
   def __init__(self, planes, mapper) -> None:

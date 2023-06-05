@@ -15,10 +15,6 @@ $ cd 3dviewer-web-project
 ```
 
 ```
-$ git checkout myproject
-```
-
-```
 $ npm run build
 ```
 
