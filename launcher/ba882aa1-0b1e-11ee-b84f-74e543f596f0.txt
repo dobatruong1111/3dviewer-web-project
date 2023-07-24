@@ -1,0 +1,67 @@
+wslink: Starting factory
+ERROR:asyncio:Task was destroyed but it is pending!
+task: <Task pending name='Task-3' coro=<IocpProactor.accept.<locals>.accept_coro() running at C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\windows_events.py:566> wait_for=<_OverlappedFuture cancelled>>
+ERROR:asyncio:Task was destroyed but it is pending!
+task: <Task pending name='Task-25' coro=<IocpProactor.accept.<locals>.accept_coro() running at C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\windows_events.py:566> wait_for=<_OverlappedFuture cancelled>>
+Traceback (most recent call last):
+  File "C:\Users\DELL E5540\Desktop\3dviewer-web-project\server\vtkpython\vtk_server.py", line 116, in <module>
+    server.start_webserver(options=args, protocol=_Server, disableLogging=True)
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\wslink\server.py", line 300, in start_webserver
+    return exec_modes[exec_mode]()
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\wslink\server.py", line 284, in main_exec
+    loop.run_until_complete(create_coroutine())
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\base_events.py", line 629, in run_until_complete
+    self.run_forever()
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\windows_events.py", line 316, in run_forever
+    super().run_forever()
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\base_events.py", line 596, in run_forever
+    self._run_once()
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\base_events.py", line 1854, in _run_once
+    event_list = self._selector.select(timeout)
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\windows_events.py", line 434, in select
+    self._poll(timeout)
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\windows_events.py", line 783, in _poll
+    status = _overlapped.GetQueuedCompletionStatus(self._iocp, ms)
+KeyboardInterrupt
+Exception ignored in: <function _ProactorBasePipeTransport.__del__ at 0x000002D9B4768430>
+Traceback (most recent call last):
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\proactor_events.py", line 116, in __del__
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\proactor_events.py", line 108, in close
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\base_events.py", line 746, in call_soon
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\base_events.py", line 510, in _check_closed
+RuntimeError: Event loop is closed
+ERROR:asyncio:Task was destroyed but it is pending!
+task: <Task pending name='Task-27' coro=<RequestHandler._handle_request() running at C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\aiohttp\web_protocol.py:435> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x000002D9BF32F400>()]> cb=[<TaskWakeupMethWrapper object at 0x000002D9BF2F5730>()]>
+ERROR:asyncio:Task was destroyed but it is pending!
+task: <Task pending name='Task-26' coro=<RequestHandler.start() running at C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\aiohttp\web_protocol.py:514> wait_for=<Task pending name='Task-27' coro=<RequestHandler._handle_request() running at C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\aiohttp\web_protocol.py:435> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x000002D9BF32F400>()]> cb=[<TaskWakeupMethWrapper object at 0x000002D9BF2F5730>()]>>
+ERROR:aiohttp.server:Error handling request
+Traceback (most recent call last):
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\wslink\backends\aiohttp\__init__.py", line 304, in handleWsRequest
+    async for msg in current_ws:
+GeneratorExit
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\aiohttp\web_protocol.py", line 435, in _handle_request
+    resp = await request_handler(request)
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\aiohttp\web_app.py", line 504, in _handle
+    resp = await handler(request)
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\wslink\backends\aiohttp\__init__.py", line 316, in handleWsRequest
+    _schedule_shutdown(aiohttp_app)
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\wslink\backends\aiohttp\__init__.py", line 41, in _schedule_shutdown
+    schedule_coroutine(timeout, _stop_server, app) if timeout > 0 else None
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\wslink\__init__.py", line 75, in schedule_coroutine
+    return loop.call_later(delay, lambda: asyncio.ensure_future(coro_partial()))
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\base_events.py", line 714, in call_later
+    timer = self.call_at(self.time() + delay, callback, *args,
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\base_events.py", line 725, in call_at
+    self._check_closed()
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\asyncio\base_events.py", line 510, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+Exception ignored in: <coroutine object RequestHandler._handle_request at 0x000002D9BF2BD3C0>
+Traceback (most recent call last):
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\aiohttp\web_protocol.py", line 448, in _handle_request
+  File "C:\Users\DELL E5540\AppData\Local\Programs\Python\Python39\lib\site-packages\aiohttp\web_protocol.py", line 638, in handle_error
+ConnectionError: Response is sent already, cannot send another response with the error message

@@ -8,6 +8,10 @@ export default function createMethods(session) {
     showMip: () => session.call('vtk.dicom3d.presets.mip', []),
     light: () => session.call('vtk.dicom3d.light', []),
     crop3d: () => session.call('vtk.dicom3d.crop', []),
+    cropfreehand3d: () => session.call('vtk.dicom3d.crop.freehand', []),
+    lengthMeasurement: () => session.call('vtk.dicom3d.length.measurement', []),
+    angleMeasurement: () => session.call('vtk.dicom3d.angle.measurement', []),
+    panning: () => session.call('vtk.dicom3d.panning', []),
   };
 }
 // RPC call

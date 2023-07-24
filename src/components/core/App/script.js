@@ -32,7 +32,11 @@ export default {
       showMuscleCT: 'WS_SHOW_MUSCLE_CT',
       showMip: 'WS_SHOW_MIP',
       light: 'WS_LIGHT',
+      lengthMeasurement: 'WS_LENGTH_MEASUREMENT',
+      angleMeasurement: 'WS_ANGLE_MEASUREMENT',
       crop3d: 'WS_CROP3D',
+      cropfreehand3d: 'WS_CROPFREEHAND3D',
+      panning: 'WS_PANNING'
     }),
   },
   mounted() {

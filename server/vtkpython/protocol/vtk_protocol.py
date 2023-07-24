@@ -5,6 +5,9 @@ import vtk
 from models.colormap import CUSTOM_COLORMAP
 from models.presets import *
 
+from models.cropping.operationMode import OperationMode
+from models.cropping.freehand import Contour2Dpipeline, CroppingFreehandInteractorStyle
+
 # -------------------------------------------------------------------------
 # ViewManager
 # -------------------------------------------------------------------------
@@ -30,6 +33,8 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         self.boxRep = vtk.vtkBoxRepresentation()
         self.widget = vtk.vtkBoxWidget2()
         self.planes = vtk.vtkPlanes()
+        # Image data
+        self.modifierLabelmap = vtk.vtkImageData()
 
     @exportRpc("vtk.initialize")
     def createVisualization(self):
@@ -41,6 +46,14 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
         path = "C:/Users/DELL E5540/Desktop/Python/dicom-data/Ankle"
         self.reader.SetDirectoryName(path)
         self.reader.Update()
+
+        originImageData = self.reader.GetOutput()
+        self.modifierLabelmap.SetOrigin(originImageData.GetOrigin())
+        self.modifierLabelmap.SetExtent(originImageData.GetExtent())
+        self.modifierLabelmap.SetSpacing(originImageData.GetSpacing())
+        self.modifierLabelmap.SetDirectionMatrix(originImageData.GetDirectionMatrix())
+        self.modifierLabelmap.AllocateScalars(originImageData.GetScalarType(), 1)
+        self.modifierLabelmap.GetPointData().GetScalars().Fill(0)
 
         # Outline
         self.outline.SetInputConnection(self.reader.GetOutputPort())
@@ -99,6 +112,10 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
     def resetCamera(self):
         renderWindow = self.getView('-1')
 
+        originImageData = self.reader.GetOutput()
+        self.mapper.SetInputData(originImageData)
+        self.modifierLabelmap.GetPointData().GetScalars().Fill(0)
+
         renderWindow.GetRenderers().GetFirstRenderer().ResetCamera()
         renderWindow.Render()
 
@@ -117,7 +134,7 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
 
     @exportRpc("viewport.mouse.zoom.wheel")
     def updateZoomFromWheel(self, event):
-      # print("zoom")
+      print("zoom")
       if 'Start' in event["type"]:
         self.getApplication().InvokeEvent('StartInteractionEvent')
 
@@ -156,71 +173,6 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
 
       renderWindow.Render()
       self.getApplication().InvokeEvent('UpdateEvent')
-        
-    @exportRpc("vtk.dicom3d.presets.bone.ct")
-    def showBoneCT(self):
-      self.color.RemoveAllPoints()
-      rgbPoints = BONE_CT.get("colorMap").get("rgbPoints")
-      for point in rgbPoints:
-         self.color.AddRGBPoint(point[0], point[1], point[2], point[3])
-
-      self.scalarOpacity.RemoveAllPoints()
-      scalarOpacityRange = BONE_CT.get("transferFunction").get("scalarOpacityRange")
-      self.scalarOpacity.AddPoint(scalarOpacityRange[0], 0)
-      self.scalarOpacity.AddPoint(scalarOpacityRange[1], 1)
-
-      renderWindow = self.getView('-1')
-      renderWindow.Render()
-      self.getApplication().InvokeEvent('UpdateEvent')
-      
-    @exportRpc("vtk.dicom3d.presets.angio.ct")
-    def showAngioCT(self):
-      self.color.RemoveAllPoints()
-      rgbPoints = ANGIO_CT.get("colorMap").get("rgbPoints")
-      for point in rgbPoints:
-        self.color.AddRGBPoint(point[0], point[1], point[2], point[3])
-
-      self.scalarOpacity.RemoveAllPoints()
-      scalarOpacityRange = ANGIO_CT.get("transferFunction").get("scalarOpacityRange")
-      self.scalarOpacity.AddPoint(scalarOpacityRange[0], 0)
-      self.scalarOpacity.AddPoint(scalarOpacityRange[1], 1)
-
-      renderWindow = self.getView('-1')
-      renderWindow.Render()
-      self.getApplication().InvokeEvent('UpdateEvent')
-
-    @exportRpc("vtk.dicom3d.presets.muscle.ct")
-    def showMuscleCT(self):
-      self.color.RemoveAllPoints()
-      rgbPoints = MUSCLE_CT.get("colorMap").get("rgbPoints")
-      for point in rgbPoints:
-        self.color.AddRGBPoint(point[0], point[1], point[2], point[3])
-
-      self.scalarOpacity.RemoveAllPoints()
-      scalarOpacityRange = MUSCLE_CT.get("transferFunction").get("scalarOpacityRange")
-      self.scalarOpacity.AddPoint(scalarOpacityRange[0], 0)
-      self.scalarOpacity.AddPoint(scalarOpacityRange[1], 1)
-
-      renderWindow = self.getView('-1')
-      renderWindow.Render()
-      self.getApplication().InvokeEvent('UpdateEvent')
-
-    @exportRpc("vtk.dicom3d.presets.mip")
-    def showMip(self):
-      self.color.RemoveAllPoints()
-      rgbPoints = MIP.get("colorMap").get("rgbPoints")
-      if len(rgbPoints):
-        for point in rgbPoints:
-          self.color.AddRGBPoint(point[0], point[1], point[2], point[3])
-
-      self.scalarOpacity.RemoveAllPoints()
-      scalarOpacityRange = MIP.get("transferFunction").get("scalarOpacityRange")
-      self.scalarOpacity.AddPoint(scalarOpacityRange[0], 0)
-      self.scalarOpacity.AddPoint(scalarOpacityRange[1], 1)
-
-      renderWindow = self.getView('-1')
-      renderWindow.Render()
-      self.getApplication().InvokeEvent('UpdateEvent')
 
     @exportRpc("vtk.dicom3d.crop")
     def crop3d(self):
@@ -236,6 +188,31 @@ class Dicom3D(vtk_protocols.vtkWebProtocol):
 
       renderWindow.Render()
       self.getApplication().InvokeEvent('UpdateEvent') # Create event after send to object
+
+    @exportRpc("vtk.dicom3d.crop.freehand")
+    def cropfreehand3d(self):
+      # print(self.getApplication())
+      renderWindowInteractor = self.getApplication().GetObjectIdMap().GetActiveObject("INTERACTOR")
+      renderWindow = self.getView('-1')
+      renderer = renderWindow.GetRenderers().GetFirstRenderer()
+    
+      contour2Dpipeline = Contour2Dpipeline()
+      renderer.AddActor(contour2Dpipeline.actor2D)
+      renderer.AddActor(contour2Dpipeline.actor2DThin)
+      renderer.AddActor(contour2Dpipeline.polyData3Dactor)
+      
+      originImageData = self.reader.GetOutput()
+
+      style = CroppingFreehandInteractorStyle(
+        contour2Dpipeline, 
+        originImageData, 
+        self.modifierLabelmap, 
+        OperationMode.INSIDE,
+        self.mapper
+      )
+
+      renderWindowInteractor.SetInteractorStyle(style)
+      self.getApplication().InvokeEvent('UpdateEvent')
 
 class IPWCallback():
   def __init__(self, planes, mapper) -> None:

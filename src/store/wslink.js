@@ -40,13 +40,14 @@ export default {
     WS_CONNECT({ state, commit, dispatch }) {
       // Initiate network connection
       const config = { 
-        application: 'cone' 
+        application: 'viewer' 
       };
 
       // Custom setup for development (http:8080 / ws:1234)
       if (location.port === '8080') {
         // We suppose that we have dev server and that ParaView/VTK is running on port 1234
-        config.sessionURL = `ws://${location.hostname}:1234/ws`;
+        config.sessionURL = `ws://localhost:1234/ws`;
+        // config.secret = "DtOsJW0fmHfXrLIx"
       }
 
       const { client } = state;
@@ -140,5 +141,25 @@ export default {
         state.client.getRemote().Cone.crop3d().catch(console.error);
       }
     },
+    WS_CROPFREEHAND3D({state}) {
+      if (state.client) {
+        state.client.getRemote().Cone.cropfreehand3d().catch(console.error);
+      }
+    },
+    WS_LENGTH_MEASUREMENT({state}) {
+      if (state.client) {
+        state.client.getRemote().Cone.lengthMeasurement().catch(console.error);
+      }
+    },
+    WS_ANGLE_MEASUREMENT({state}) {
+      if (state.client) {
+        state.client.getRemote().Cone.angleMeasurement().catch(console.error);
+      }
+    },
+    WS_PANNING({state}) {
+      if (state.client) {
+        state.client.getRemote().Cone.panning().catch(console.error);
+      }
+    }
   },
 };

@@ -40,7 +40,8 @@ from vtk.web import wslink as vtk_wslink
 from vtk.web import protocols as vtk_protocols
 
 import vtk
-from vtk_protocol import Dicom3D
+from protocol.vtk_protocol import Dicom3D
+from protocol.preset_protocol import Preset3D
 
 # =============================================================================
 # Server class
@@ -69,6 +70,7 @@ class _Server(vtk_wslink.ServerProtocol):
 
         # Custom API
         self.registerVtkWebProtocol(Dicom3D()) # append a list of LinkProtocol
+        self.registerVtkWebProtocol(Preset3D())
 
         # a list of LinkProtocol provide rpc and publish functionality
 

@@ -5,7 +5,12 @@
     <v-progress-linear :active="busy" :indeterminate="busy" absolute bottom />
     <v-spacer />
 
+
+    <v-btn variant="outlined" v-on:click="panning()">Panning</v-btn>
+    <v-btn variant="outlined" v-on:click="cropfreehand3d()">Crop Freehand</v-btn>
     <v-btn variant="outlined" v-on:click="crop3d()">Crop</v-btn>
+    <v-btn variant="outlined" v-on:click="lengthMeasurement()">Length</v-btn>
+    <v-btn variant="outlined" v-on:click="angleMeasurement()">Angle</v-btn>
     <v-btn variant="outlined" v-on:click="showBoneCT()">Bone</v-btn>
     <v-btn variant="outlined" v-on:click="showAngioCT()">Angio</v-btn>
     <v-btn variant="outlined" v-on:click="showMuscleCT()">Muscle</v-btn>
